@@ -2,6 +2,7 @@ package vcomm
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/Nv7-Github/vcomm/definitions"
@@ -29,6 +30,7 @@ func (t *TestServer) Hi(val string) (TestReturnType, error) {
 
 func (t *TestServer) Receive(msg string) error {
 	t.Messages = append(t.Messages, msg)
+	fmt.Println(t.Messages)
 	return nil
 }
 
@@ -41,5 +43,20 @@ func TestVComm(t *testing.T) {
 		return
 	}
 
-	fmt.Println(definitions.GenerateTypescript(def))
+	f, err := os.Create("test.ts")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	defer f.Close()
+
+	_, err = f.WriteString(definitions.GenerateTypescript(def))
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	// Test receive
+	res := comm.AcceptMessage(`{"Fn": "Hi", "Value": "Hello"}`)
+	fmt.Println(res)
 }
