@@ -20,7 +20,7 @@ func (c *VComm) CreateDefinitions() (*definitions.Definitions, error) {
 		if err != nil {
 			return nil, err
 		}
-		out.Functions = append(out.Functions, fn)
+		out.Functions[i] = fn
 	}
 
 	return out, nil
@@ -98,7 +98,7 @@ func (c *VComm) getType(val reflect.Type) (definitions.Type, error) {
 		case reflect.String:
 			return definitions.STRING, nil
 
-		case reflect.Array:
+		case reflect.Slice:
 			elTyp, err := c.getType(val.Elem())
 			return &definitions.ArrayType{
 				ElemType: elTyp,
