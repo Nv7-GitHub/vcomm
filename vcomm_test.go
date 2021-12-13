@@ -1,9 +1,10 @@
 package vcomm
 
 import (
+	"fmt"
 	"testing"
 
-	"github.com/davecgh/go-spew/spew"
+	"github.com/Nv7-Github/vcomm/definitions"
 )
 
 type TestServer struct {
@@ -40,7 +41,5 @@ func TestVComm(t *testing.T) {
 		return
 	}
 
-	spew.Config.DisablePointerAddresses = true
-	spew.Config.Indent = "    "
-	spew.Dump(def)
+	fmt.Println(definitions.GenerateTypescript(def))
 }

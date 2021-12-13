@@ -33,12 +33,15 @@ func (c *VComm) getMethod(val reflect.Method) (*definitions.Function, error) {
 	}
 
 	var inType definitions.Type
+	inName := ""
 	if val.Type.NumIn() == 2 {
 		var err error
 		inType, err = c.getType(val.Type.In(1))
 		if err != nil {
 			return nil, err
 		}
+		inName = "value"
+		// TODO: figure out a better way
 	}
 
 	// out type
@@ -80,6 +83,7 @@ func (c *VComm) getMethod(val reflect.Method) (*definitions.Function, error) {
 
 	return &definitions.Function{
 		Name:       val.Name,
+		ParamName:  inName,
 		ParamType:  inType,
 		ReturnType: outType,
 	}, nil

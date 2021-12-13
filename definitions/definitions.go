@@ -143,15 +143,11 @@ func (s *StructType) String() string {
 	return out.String()
 }
 
-type FunctionParameter struct {
-	Name string
-	Type Type
-}
-
 type Function struct {
 	Name       string
-	ParamType  Type // may be nil, indicating no parameters
-	ReturnType Type // may be nil, indicating no return
+	ParamName  string // if ParamType is nil, paramname is empty string
+	ParamType  Type   // may be nil, indicating no parameters
+	ReturnType Type   // may be nil, indicating no return
 	// Functions also have error returns
 }
 
