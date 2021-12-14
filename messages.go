@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+
+	"github.com/mitchellh/mapstructure"
 )
 
 type sendDataVal struct {
@@ -20,7 +22,7 @@ type sendData struct {
 	Value sendDataVal
 }
 
-func (v *VComm) AcceptMessage(message string) string {
+func (v *VComm) Message(message string) string {
 	var dat sendData
 	err := json.Unmarshal([]byte(message), &dat)
 	if err != nil {
@@ -36,12 +38,24 @@ func (v *VComm) AcceptMessage(message string) string {
 	inps := make([]reflect.Value, 0)
 	if methType.Type.NumIn() == 2 {
 		// Get input
-		v := reflect.Zero(methType.Type.In(1)).Interface()
+		typ := methType.Type.In(1)
+		v := reflect.Zero(typ).Interface()
 		err = json.Unmarshal([]byte(dat.Value.value), &v)
 		if err != nil {
 			return fmt.Sprintf(`{"error": "%s"}`, err.Error())
 		}
-		inps = append(inps, reflect.ValueOf(v))
+
+		// If struct?
+		if typ.Kind() == reflect.Struct {
+			newV := reflect.Zero(typ).Interface()
+			err := mapstructure.Decode(v, &newV)
+			if err != nil {
+				return fmt.Sprintf(`{"error": "%s"}`, err.Error())
+			}
+			inps = append(inps, reflect.ValueOf(newV))
+		} else {
+			inps = append(inps, reflect.ValueOf(v))
+		}
 	}
 	res := method.Call(inps)
 

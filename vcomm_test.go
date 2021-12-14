@@ -1,37 +1,34 @@
 package vcomm
 
 import (
+	"errors"
 	"fmt"
+	"log"
+	"net/http"
 	"os"
 	"testing"
 
 	"github.com/Nv7-Github/vcomm/definitions"
+	"github.com/gorilla/websocket"
 )
 
+var upgrader = websocket.Upgrader{
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
+}
+
 type TestServer struct {
-	Messages []string
 }
 
-type TestReturnType struct {
-	Val    string
-	Val2   int
-	Val3   float64
-	Nested TestReturnTypeNested
+type Param struct {
+	Val1 int
+	Val2 []string
 }
 
-type TestReturnTypeNested struct {
-	Arr []int
-	Map map[string]string
-}
-
-func (t *TestServer) Hi(val string) (TestReturnType, error) {
-	return TestReturnType{}, nil
-}
-
-func (t *TestServer) Receive(msg string) error {
-	t.Messages = append(t.Messages, msg)
-	fmt.Println(t.Messages)
-	return nil
+func (t *TestServer) Receive(val Param) error {
+	fmt.Println(val)
+	return errors.New("uh oh")
 }
 
 func TestVComm(t *testing.T) {
@@ -43,7 +40,7 @@ func TestVComm(t *testing.T) {
 		return
 	}
 
-	f, err := os.Create("test.ts")
+	f, err := os.Create("test/src/generated.ts")
 	if err != nil {
 		t.Error(err)
 		return
@@ -56,7 +53,30 @@ func TestVComm(t *testing.T) {
 		return
 	}
 
-	// Test receive
-	res := comm.AcceptMessage(`{"Fn": "Hi", "Value": "Hello"}`)
-	fmt.Println(res)
+	// Dev server
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		c, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			log.Print("upgrade:", err)
+			return
+		}
+		defer c.Close()
+		for {
+			mt, message, err := c.ReadMessage()
+			if err != nil {
+				log.Println("read:", err)
+				break
+			}
+
+			res := comm.Message(string(message))
+
+			err = c.WriteMessage(mt, []byte(res))
+			if err != nil {
+				log.Println("write:", err)
+				break
+			}
+		}
+	})
+	fmt.Println("Listening on port 8080")
+	log.Fatal(http.ListenAndServe("localhost:8080", nil))
 }

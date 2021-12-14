@@ -13,7 +13,12 @@ type SendData = {
 
 export type Sender = (value: string) => Promise<string>;
 
-"__types__"
+export type Param = {
+	Val1: number;
+	Val2: Array<string>;
+}
+
+
 export class Client extends EventTarget {
 	sender: Sender;
 
@@ -33,6 +38,9 @@ export class Client extends EventTarget {
 		return JSON.parse(res);
 	}
 
-	"__code__"
+	async Receive(value: Param): Promise<OptionalError> {
+		let res = await this.createMessage("Receive", value);
+		return res as OptionalError;
+	}
 }
 
